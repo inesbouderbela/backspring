@@ -1,6 +1,7 @@
 package tn.ucar.enicar.info.projetspring.auth;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import tn.ucar.enicar.info.projetspring.entities.Token;
 import tn.ucar.enicar.info.projetspring.entities.TokenType;
 import tn.ucar.enicar.info.projetspring.entities.User;
@@ -24,19 +25,24 @@ public class AuthenticationService {
 
 
 public AuthenticationResponse register (RegisterRequest request){
+    System.out.println("Tentative d'inscription: " + request.getEmail());
+
    var user = User.builder()
            .firstname(request.getFirstname())
            .lastname(request.getLastname())
            .email(request.getEmail())
            .password(passwordEncoder.encode(request.getPassword()))
-           .role(Role.admin)
+           .role(request.getRole() != null ? request.getRole() : Role.VOLUNTARY)
            .build();
    var savedUser =repository.save(user);
+
    var jwtToken = jwtService.generateToken(user);
-   revokeAllUserTokens(user);
+
+    revokeAllUserTokens(user);
     saveUserToken(savedUser, jwtToken);
     return AuthenticationResponse.builder()
-            .token(jwtToken)
+            .accessToken(jwtToken)
+            .role(user.getRole().name())
             .build();
 }
 
@@ -64,7 +70,7 @@ private void revokeAllUserTokens(User user){
 
 
     public AuthenticationResponse authenticate (AuthenticationRequest request){
-    authenticationManager.authenticate(
+        authenticationManager.authenticate(
             new UsernamePasswordAuthenticationToken(
                     request.getEmail(),
                     request.getPassword()));
@@ -75,7 +81,8 @@ private void revokeAllUserTokens(User user){
     revokeAllUserTokens(user);
     saveUserToken(user, jwtToken);
     return AuthenticationResponse.builder()
-            .token(jwtToken)
+            .accessToken(jwtToken)
+            .role(user.getRole().name())
             .build();
 }
 }
