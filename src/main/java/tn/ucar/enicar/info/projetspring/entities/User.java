@@ -20,7 +20,7 @@ import org.springframework.security.core.userdetails.UserDetails;
     public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Integer id;
     private String firstname;
     private String lastname;
     private String email;
@@ -49,7 +49,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of( new SimpleGrantedAuthority(role.name()));
+        return role.getAuthorities();
     }
 
     @Override
