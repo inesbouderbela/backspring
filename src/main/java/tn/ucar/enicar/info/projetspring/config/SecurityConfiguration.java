@@ -22,8 +22,7 @@ import java.util.List;
 import static org.springframework.http.HttpMethod.*;
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 import static tn.ucar.enicar.info.projetspring.entities.Permission.*;
-import static tn.ucar.enicar.info.projetspring.entities.Role.ADMIN;
-import static tn.ucar.enicar.info.projetspring.entities.Role.VOLUNTARY;
+import static tn.ucar.enicar.info.projetspring.entities.Role.*;
 
 
 @Configuration
@@ -43,6 +42,9 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(req ->
                         req.requestMatchers("/api/v1/auth/**")
                                 .permitAll()
+                                .requestMatchers("/api/v1/admin/**").hasRole(ADMIN.name())
+                                .requestMatchers(POST, "/api/v1/admin/**").hasAuthority(ADMIN_CREATE.getPermission())
+
                                 .requestMatchers("/api/v1/management/**").hasAnyRole(ADMIN.name(), VOLUNTARY.name())
                                 .requestMatchers(GET, "/api/v1/management/**").hasAnyAuthority(ADMIN_READ.name(), VOLUNTARY_READ.name())
                                 .requestMatchers(POST, "/api/v1/management/**").hasAnyAuthority(ADMIN_CREATE.name(), VOLUNTARY_CREATE.name())
