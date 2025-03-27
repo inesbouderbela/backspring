@@ -13,7 +13,10 @@ public enum Permission {
     VOLUNTARY_READ("management:read"),
     VOLUNTARY_CREATE("management:create"),
     VOLUNTARY_UPDATE("management:update"),
-    VOLUNTARY_DELETE("management:delete");
+    VOLUNTARY_DELETE("management:delete"),
+    MANAGER_READ("manager:read"),
+    MANAGER_UPDATE("manager:update"),
+    MANAGER_CREATE("manager:create");
     private final String permission;
 
 }
