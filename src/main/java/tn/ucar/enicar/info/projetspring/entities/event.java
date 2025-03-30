@@ -19,8 +19,8 @@ public class event implements Serializable{
     private long id;
     private String title;
     private String description;
-    private Date startdate ;
-    private Date enddate ;
+    private Date startDate ;
+    private Date endDate ;
     private String location ;
 
     @ManyToMany(mappedBy="events", cascade = CascadeType.ALL)
