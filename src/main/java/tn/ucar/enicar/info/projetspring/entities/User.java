@@ -23,6 +23,7 @@ import org.springframework.security.core.userdetails.UserDetails;
     private Integer id;
     private String firstname;
     private String lastname;
+    @Column(nullable = false, unique = true)
     private String email;
     private String password;
     @Enumerated(EnumType.STRING)
@@ -46,6 +47,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy="user")
     private Set<message> messages;
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "user")
+    private Set<Candidate> candidates;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

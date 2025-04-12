@@ -19,7 +19,7 @@ public class discussion implements Serializable {
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy="discussion")
     private Set<message> messages;
-
+/*
     @OneToOne(mappedBy= "discussion")
-    private event event;
+    private event event;*/
 }

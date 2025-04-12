@@ -1,34 +1,70 @@
 package tn.ucar.enicar.info.projetspring.entities;
 
-import java.util.Date;
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.scheduling.config.Task;
 
 import java.io.Serializable;
-import java.util.Set;
+import java.util.*;
 
 @Entity
-@Getter
-@Setter
+@Getter @Setter
 @NoArgsConstructor
-@AllArgsConstructor
-@ToString
-public class event implements Serializable{
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+public class event implements Serializable {
+
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
     private String title;
+    @Column(columnDefinition = "TEXT")
     private String description;
-    private Date startDate ;
-    private Date endDate ;
-    private String location ;
+    private String location;
 
-    @ManyToMany(mappedBy="events", cascade = CascadeType.ALL)
-    private Set<User> users;
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date startDate;
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy="event")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date endDate;
+
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(updatable = false)
+    private Date createdAt = new Date();
+
+    private String organization;
+    private Integer participants;
+    private String technology;
+
+    @Column(columnDefinition = "TEXT")
+    private String benefits; // Format: "Bénéfice 1|Bénéfice 2"
+
+    @Column(columnDefinition = "TEXT")
+    private String vision;
+
+    @Lob
+    @Column(nullable = true,name = "image_data")
+    private byte[] imageData;
+
+    @ManyToOne
+    @JoinColumn(name = "manager_id")
+    private User manager;
+
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL)
+    private List<Poste> postes = new ArrayList<>();
+
+    @ManyToMany
+    @JoinTable(
+            name = "event_volunteers",
+            joinColumns = @JoinColumn(name = "event_id"),
+            inverseJoinColumns = @JoinColumn(name = "user_id")
+    )
+    private Set<User> volunteers = new HashSet<>();
+    @OneToMany(mappedBy="event")
     private Set<task> tasks;
 
-    @OneToOne
-    private discussion discussion;
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = new Date();
+    }
+
+
 }

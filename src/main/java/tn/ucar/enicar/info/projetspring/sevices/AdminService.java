@@ -19,7 +19,7 @@ public class AdminService {
     private final userRepo userRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
-
+/*
     public AuthenticationResponse createManager(RegisterRequest request) {
         // Génération d'un mot de passe aléatoire
         String rawPassword = UUID.randomUUID().toString().substring(0, 8);
@@ -40,5 +40,5 @@ public class AdminService {
         return AuthenticationResponse.builder()
                 .build();
 
-    }
+    }*/
 }

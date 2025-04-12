@@ -6,6 +6,8 @@ import tn.ucar.enicar.info.projetspring.entities.User;
 import java.util.Optional;
 
 public interface userRepo extends JpaRepository<User, Integer> {
-Optional<User> findByEmail(String email);
 
+    Optional<User> findByEmail(String email);
+
+    Optional<User> findById(Integer id);
 }
