@@ -21,7 +21,7 @@ public class Candidate {
     private User user;
 
     @ManyToOne
-    @JoinColumn(name = "poste_id") // Lien avec un Poste et non plus directement avec Event
+    @JoinColumn(name = "poste_id")
     private Poste poste;
 
     private String experience;
