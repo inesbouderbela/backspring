@@ -1,4 +1,5 @@
 package tn.ucar.enicar.info.projetspring.enums;
 
-public record TaskStatus() {
+public enum TaskStatus {
+    ToDo ,InProgress,Done ;
 }

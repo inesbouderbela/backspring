@@ -2,6 +2,7 @@ package tn.ucar.enicar.info.projetspring.entities;
 
 import jakarta.persistence.*;
 import lombok.*;
+import tn.ucar.enicar.info.projetspring.enums.StatusCandidat;
 
 @Entity
 @Getter
@@ -10,17 +11,30 @@ import lombok.*;
 @AllArgsConstructor
 @ToString
 @Builder
-public class Candidate {
 
+@Table(uniqueConstraints = @UniqueConstraint(
+        columnNames = {"user_id", "poste_id"}
+))
+public class Candidature {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
-    private User user;
+    private User candidat;
 
-    @ManyToOne
+
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "event_id")
+    private event event;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "team_id")
+    private Team team;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "poste_id")
     private Poste poste;
 

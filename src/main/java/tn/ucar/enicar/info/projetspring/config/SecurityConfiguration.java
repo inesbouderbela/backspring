@@ -35,6 +35,7 @@ public class SecurityConfiguration {
     private final LogoutHandler logoutHandler;
 
     @Bean
+
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
@@ -42,9 +43,10 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(req ->
                         req.requestMatchers("/api/v1/auth/**")
                                 .permitAll()
+                                .requestMatchers("/api/uploads/**")  // 👈 autorisation d’accès libre à /api/uploads/**
+                                .permitAll()
                                 .requestMatchers("/api/v1/admin/**").hasRole(ADMIN.name())
                                 .requestMatchers(POST, "/api/v1/admin/**").hasAuthority(ADMIN_CREATE.getPermission())
-
                                 .requestMatchers("/api/v1/management/**").hasAnyRole(ADMIN.name(), VOLUNTARY.name())
                                 .requestMatchers(GET, "/api/v1/management/**").hasAnyAuthority(ADMIN_READ.name(), VOLUNTARY_READ.name())
                                 .requestMatchers(POST, "/api/v1/management/**").hasAnyAuthority(ADMIN_CREATE.name(), VOLUNTARY_CREATE.name())
@@ -59,16 +61,12 @@ public class SecurityConfiguration {
                 .logout(logout ->
                         logout.logoutUrl("/api/v1/auth/logout")
                                 .addLogoutHandler(logoutHandler)
-                                .logoutSuccessHandler(
-                                        (request, response, authentication) ->
-                                                SecurityContextHolder.clearContext())
-
-                )
-        ;
-
+                                .logoutSuccessHandler((request, response, authentication) -> SecurityContextHolder.clearContext())
+                );
 
         return http.build();
     }
+
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {

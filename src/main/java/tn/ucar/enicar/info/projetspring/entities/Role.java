@@ -29,12 +29,12 @@ public enum Role {
             VOLUNTARY_UPDATE,
             VOLUNTARY_DELETE,
             VOLUNTARY_CREATE
-    ));
-    /*MANAGER(Set.of(
-                    MANAGER_READ,
+    )),
+    MANAGER(Set.of(
+            MANAGER_READ,
             MANAGER_UPDATE,
             MANAGER_CREATE
-            ));*/
+    ));
 
     @Getter
     private final Set<Permission> permissions;

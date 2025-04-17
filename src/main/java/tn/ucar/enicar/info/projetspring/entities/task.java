@@ -1,11 +1,13 @@
 package tn.ucar.enicar.info.projetspring.entities;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 
 import java.util.Date;
 import jakarta.persistence.*;
 import lombok.*;
+import tn.ucar.enicar.info.projetspring.enums.TaskStatus;
 
 import java.io.Serializable;
 import java.util.Set;
@@ -24,7 +26,7 @@ public class task implements Serializable{
     private String description ;
     private Date deadline ;
     @Enumerated(EnumType.STRING)
-    private status Status ;
+    private TaskStatus Status ;
     private int note ;
 
     @ManyToOne
@@ -35,4 +37,11 @@ public class task implements Serializable{
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy="task")
     private Set<comment> comments;
+    @ManyToOne
+    @JoinColumn(name = "assigned_to_id") // matches the mappedBy reference
+    @JsonBackReference
+    private User assignedTo; // This must match the mappedBy value
+    @ManyToOne
+    @JoinColumn(name = "team_id")
+    private Team team;
 }

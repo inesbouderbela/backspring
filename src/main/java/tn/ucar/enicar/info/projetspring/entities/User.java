@@ -1,14 +1,16 @@
 package tn.ucar.enicar.info.projetspring.entities;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 @Entity
 @Getter
@@ -17,39 +19,68 @@ import org.springframework.security.core.userdetails.UserDetails;
 @AllArgsConstructor
 @Builder
 
-    public class User implements UserDetails {
+public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Integer id; // Changé de Integer à Long pour cohérence
+
     private String firstname;
     private String lastname;
+
     @Column(nullable = false, unique = true)
     private String email;
+
     private String password;
+
     @Enumerated(EnumType.STRING)
     private Role role;
-    private int score ;
 
-    @OneToMany(mappedBy = "user")
+    private int score;
+
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+
     private List<Token>tokens;
 
-    @ManyToMany(cascade = CascadeType.ALL)
-    private Set<event> events;
+    @OneToMany(mappedBy = "generalCoordinator")
+    private Set<event> coordinatedEvents = new HashSet<>();
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy="user")
-    private Set<task> tasks;
+    @OneToMany(mappedBy = "teamLeader")
+    @JsonBackReference
+    private Set<Team> ledTeams = new HashSet<>();
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy="user")
-    private Set<comment> comments;
+    @OneToMany(mappedBy = "candidat")
+    private Set<Candidature> candidatures = new HashSet<>();
 
-    @ManyToMany(cascade = CascadeType.ALL)
-    private Set<notification> notifications;
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy="user")
-    private Set<message> messages;
+    @OneToMany(mappedBy = "assignedTo")
+    private Set<task> assignedTasks = new HashSet<>();
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "user")
-    private Set<Candidate> candidates;
+    @ManyToMany
+    @JoinTable(
+            name = "user_events",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "event_id")
+    )
+    @JsonManagedReference
+    private Set<event> events = new HashSet<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<comment> comments = new HashSet<>();
+
+    @ManyToMany
+    @JoinTable(
+            name = "user_notifications",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "notification_id")
+    )
+    private Set<notification> notifications = new HashSet<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<message> messages = new HashSet<>();
+
+    @OneToMany(mappedBy = "user")
+    private Set<TeamMembership> memberships = new HashSet<>();
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

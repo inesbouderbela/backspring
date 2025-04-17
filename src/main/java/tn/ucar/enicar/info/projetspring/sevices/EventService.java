@@ -1,17 +1,26 @@
 package tn.ucar.enicar.info.projetspring.sevices;
+import jdk.jfr.Event;
 import lombok.AllArgsConstructor;
+import org.modelmapper.ModelMapper;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+import tn.ucar.enicar.info.projetspring.dto.EventCreateDTO;
+
 import tn.ucar.enicar.info.projetspring.entities.Poste;
 import tn.ucar.enicar.info.projetspring.entities.event;
 import tn.ucar.enicar.info.projetspring.entities.User;
 import tn.ucar.enicar.info.projetspring.repositories.EventRepository;
 
+import tn.ucar.enicar.info.projetspring.repositories.PosteRepository;
 import tn.ucar.enicar.info.projetspring.repositories.userRepo;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -19,19 +28,14 @@ import java.util.Optional;
 public class EventService {
     private final EventRepository eventRepository;
     private final userRepo userRepository;
+    private final FileStorageService fileStorageService;
+    private final PosteRepository posteRepository;
+    private final ModelMapper modelMapper;
     public List<event> getAllEvents() {
         return eventRepository.findAll();
     }
 
-    public event createEvent(event event) {
-        if (event.getEndDate().before(event.getStartDate())) {
-            throw new IllegalArgumentException("La date de fin doit être après la date de début");
-        }
 
-
-        event.setManager(null);
-        return eventRepository.save(event);
-    }
 
 /*
     public event assignResponsibleToEvent(Long eventId, Long responsibleId) {
@@ -50,7 +54,7 @@ public class EventService {
         return eventRepository.save(event);
     }*/
 
-
+/*
     public Optional<event> getEventById(Long id) {
         return eventRepository.findById(id);
     }
@@ -69,4 +73,58 @@ public class EventService {
     public List<event> getEventsByResponsible(Long responsibleId) {
         return eventRepository.findByResponsiblePersonId(responsibleId);
     }*/
+
+
+
+    public event createEvent(EventCreateDTO dto, String adminEmail) {
+        event event = new event();
+
+        // Champs obligatoires
+        event.setTitle(dto.getTitle());
+        event.setDescription(dto.getDescription());
+        event.setLocation(dto.getLocation());
+        event.setStartDate(convertToDate(dto.getStartDate()));
+        event.setEndDate(convertToDate(dto.getEndDate()));
+
+        // Champs optionnels
+        event.setOrganization(dto.getOrganization());
+        event.setTechnology(dto.getTechnology());
+        event.setBenefits(dto.getBenefits());
+        event.setVision(dto.getVision());
+
+        // Gestion de l'image
+        try {
+            if (dto.getImageFile() != null && !dto.getImageFile().isEmpty()) {
+                String imagePath = fileStorageService.storeFile(dto.getImageFile(), "events");
+                event.setImagePath(imagePath);  // Stockage du chemin relatif seulement
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to store image file: " + e.getMessage(), e);
+        }
+
+        // L'admin devient automatiquement manager
+        User admin = userRepository.findByEmail(adminEmail)
+                .orElseThrow(() -> new RuntimeException("Admin not found"));
+        event.setGeneralCoordinator(admin);
+
+        return eventRepository.save(event);
+    }
+
+/*
+    public event getEventById(Long id) {
+        return eventRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Événement non trouvé"));
+    }*/
+
+    public Optional<event> getEventById(Long id) {
+        return eventRepository.findById(id);
+    }
+
+    private Date convertToDate(LocalDateTime localDateTime) {
+        return Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
+    }
+
+
+
 }

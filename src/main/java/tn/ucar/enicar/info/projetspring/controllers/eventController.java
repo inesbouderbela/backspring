@@ -1,15 +1,28 @@
 package tn.ucar.enicar.info.projetspring.controllers;
 
+import io.jsonwebtoken.io.IOException;
+import jakarta.annotation.Resource;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import tn.ucar.enicar.info.projetspring.dto.EventCreateDTO;
+
 import tn.ucar.enicar.info.projetspring.dto.EventDto;
 import tn.ucar.enicar.info.projetspring.dto.ManagerAssignmentDto;
+import tn.ucar.enicar.info.projetspring.entities.User;
 import tn.ucar.enicar.info.projetspring.entities.event;
+import tn.ucar.enicar.info.projetspring.repositories.userRepo;
 import tn.ucar.enicar.info.projetspring.sevices.EventService;
 
+import java.net.MalformedURLException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -20,67 +33,65 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class eventController {
     private final EventService eventService;
-    @PostMapping
+    private final userRepo userRepository;
+
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> createEvent(@RequestBody EventDto eventDto) {
+
+
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> createEvent(
+            @RequestPart("event") EventCreateDTO eventDTO,
+            @RequestPart(value = "imageFile", required = false) MultipartFile imageFile,
+            @AuthenticationPrincipal User admin) {
+
         try {
-            if (eventDto.getTitle() == null || eventDto.getTitle().trim().isEmpty()) {
-                return ResponseEntity.badRequest().body(createErrorResponse("Le titre est requis"));
-            }
-            if (eventDto.getStartDate() == null || eventDto.getEndDate() == null) {
-                return ResponseEntity.badRequest().body(createErrorResponse("Les dates sont requises"));
-            }
 
-            if (eventDto.getEndDate().before(eventDto.getStartDate())) {
-                return ResponseEntity.badRequest().body(
-                        createErrorResponse("La date de fin doit être après la date de début")
-                );
-            }
+            eventDTO.setImageFile(imageFile);
 
-            if (eventDto.getStartDate().before(new Date())) {
-                return ResponseEntity.badRequest().body(
-                        "La date de début doit être aujourd'hui ou dans le futur"
-                );
-            }
+            event createdEvent = eventService.createEvent(eventDTO, admin.getEmail());
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdEvent);
 
-            event event = new event();
-            event.setTitle(eventDto.getTitle());
-            event.setDescription(eventDto.getDescription());
-            event.setLocation(eventDto.getLocation());
-            event.setStartDate(eventDto.getStartDate());
-            event.setEndDate(eventDto.getEndDate());
-
-            event createdEvent = eventService.createEvent(event);
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("message", "Événement créé avec succès");
-            response.put("data", createdEvent);
-
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
-
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().body(
-                    createErrorResponse("Erreur serveur: " + e.getMessage())
-            );
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Erreur lors du traitement de l'image");
         }
     }
+/*
+    @GetMapping("/{id}/image")
+    public ResponseEntity<?> getEventImage(@PathVariable Long id) {
+        event event = eventService.getEventById(id); // Lance une exception si non trouvé
+
+        if (event.getImagePath() == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.ok()
+                .body(Map.of("imageUrl", event.getImageUrl()));
+    }*/
 
 
-    private Map<String, String> createErrorResponse(String message) {
-        Map<String, String> response = new HashMap<>();
-        response.put("success", "false");
-        response.put("message", message);
-        return response;
+
+
+    @GetMapping("/uploads/events/{filename:.+}")
+    public ResponseEntity<Resource> getImage(@PathVariable String filename) throws MalformedURLException {
+        Path file = Paths.get("uploads/events/" + filename);
+        UrlResource resource = new UrlResource(file.toUri());
+        return ResponseEntity.ok()
+                .contentType(MediaType.IMAGE_PNG)
+                .body((Resource) resource);
     }
+
+
     @GetMapping
     public ResponseEntity<List<event>> getAllEvents() {
         List<event> events = eventService.getAllEvents();
         return ResponseEntity.ok(events);
     }
     @GetMapping("/{id}")
-    public ResponseEntity<event> getEvent(@PathVariable Long id) {
-        return eventService.getEventWithDetails(id)
+    public ResponseEntity<event> getEventById(@PathVariable Long id) {
+        return eventService.getEventById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }

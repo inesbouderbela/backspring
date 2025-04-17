@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import tn.ucar.enicar.info.projetspring.entities.*;
+import tn.ucar.enicar.info.projetspring.enums.StatusCandidat;
 import tn.ucar.enicar.info.projetspring.repositories.*;
 
 import java.io.File;
@@ -27,7 +28,7 @@ public class CandidateService {
 
     private static final String CV_DIRECTORY = "C:/uploaded-cvs/";
 
-    public Candidate applyForPoste(Integer userId, Long posteId, String experience, String coverLetter, MultipartFile cvFile) throws IOException {
+    public Candidature applyForPoste(Integer userId, Long posteId, String experience, String coverLetter, MultipartFile cvFile) throws IOException {
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
@@ -48,8 +49,8 @@ public class CandidateService {
         Files.write(filePath, cvFile.getBytes());
 
 
-        Candidate candidate = Candidate.builder()
-                .user(user)
+        Candidature candidature = Candidature.builder()
+                .candidat(user)
                 .poste(poste)
                 .experience(experience)
                 .coverLetter(coverLetter)
@@ -57,21 +58,21 @@ public class CandidateService {
                 .status(StatusCandidat.PENDING)
                 .build();
 
-        return candidateRepository.save(candidate);
+        return candidateRepository.save(candidature);
     }
 
-    public List<Candidate> getAllCandidates() {
+    public List<Candidature> getAllCandidates() {
         return candidateRepository.findAll();
     }
 
-    public Candidate getCandidateById(Long id) {
+    public Candidature getCandidateById(Long id) {
         return candidateRepository.findById(id).orElse(null);
     }
 
     public void acceptCandidate(Long id) {
-        Candidate candidate = candidateRepository.findById(id)
+        Candidature candidature = candidateRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Candidat non trouvé"));
-        candidate.setStatus(StatusCandidat.ACCEPTED);
-        candidateRepository.save(candidate);
+        candidature.setStatus(StatusCandidat.ACCEPTED);
+        candidateRepository.save(candidature);
     }
 }
